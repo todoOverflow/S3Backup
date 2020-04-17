@@ -4,6 +4,7 @@ using Amazon.S3.Model;
 using S3Backup.Domain.Communication.Bucket;
 using S3Backup.Domain.Interfaces;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace S3Backup.Infrastructure.Repository
 {
@@ -36,6 +37,33 @@ namespace S3Backup.Infrastructure.Repository
                 BucketName = bucketname,
                 RequestId = response.ResponseMetadata.RequestId
             };
+        }
+
+        public async Task<IEnumerable<ListS3BucketResponse>> ListBuckets()
+        {
+            var response = await _s3Client.ListBucketsAsync();
+            return response.Buckets.Select(b => new ListS3BucketResponse
+            {
+                BucketName = b.BucketName,
+                CreationDate = b.CreationDate
+            });
+        }
+
+        public async Task<bool> DeleteEmptyBucket(string bucketName)
+        {
+            if (!await _s3Client.DoesS3BucketExistAsync(bucketName))
+            {
+                return false;
+            }
+            try
+            {
+                await _s3Client.DeleteBucketAsync(bucketName);
+                return true;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
         }
     }
 }
