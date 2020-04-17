@@ -39,6 +39,7 @@ namespace S3Backup.Api
             services.AddSwaggerGen(
                 c => c.SwaggerDoc("v1", new Info { Title = "S3 backup App", Version = "v1" })
             );
+            services.AddSingleton<IFileRepository, FileResository>();
 
         }
 
