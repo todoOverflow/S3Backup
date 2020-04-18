@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using S3Backup.Domain.Communication.File;
+using S3Backup.Domain.Communication.JsonObject;
 using S3Backup.Domain.Interfaces;
 
 namespace S3Backup.Api.Controllers
@@ -56,6 +57,22 @@ namespace S3Backup.Api.Controllers
         public async Task<ActionResult<DeleteFileResponse>> DeleteFile(string bucketName, string fileName)
         {
             var response = await _fileRepository.DeleteFile(bucketName, fileName);
+            return Ok(response);
+        }
+
+        [HttpPost]
+        [Route("{bucketName}/addjsonobject")]
+        public async Task<ActionResult> AddJsonObject(string bucketName, [FromBody]AddJsonObjectRequest request)
+        {
+            await _fileRepository.AddJsonObject(bucketName, request);
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("{bucketName}/getjsonobject")]
+        public async Task<ActionResult<GetJsonObjectResponse>> GetJsonObject(string bucketName, [FromQuery]string key)
+        {
+            var response = await _fileRepository.GetJsonObject(bucketName, key);
             return Ok(response);
         }
     }

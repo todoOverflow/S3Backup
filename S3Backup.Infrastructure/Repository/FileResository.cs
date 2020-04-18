@@ -6,7 +6,9 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 using S3Backup.Domain.Communication.File;
+using S3Backup.Domain.Communication.JsonObject;
 using S3Backup.Domain.Interfaces;
 
 namespace S3Backup.Infrastructure.Repository
@@ -98,6 +100,41 @@ namespace S3Backup.Infrastructure.Repository
             {
                 NumberOfDeleteObjects = response.DeletedObjects.Count,
             };
+        }
+
+        public async Task AddJsonObject(string bucketName, AddJsonObjectRequest request)
+        {
+            var createdOnUtc = DateTime.UtcNow;
+            var s3Key = $"{createdOnUtc:yyyy}/{createdOnUtc:MM}/{createdOnUtc:dd}/{request.Id}";
+            var body = JsonConvert.SerializeObject(request);
+
+            var putObjectRequest = new PutObjectRequest
+            {
+                BucketName = bucketName,
+                Key = s3Key,
+                ContentBody = body,
+            };
+
+            await _s3Client.PutObjectAsync(putObjectRequest);
+
+        }
+
+        public async Task<GetJsonObjectResponse> GetJsonObject(string bucketName, string key)
+        {
+            var getObjectRequest = new GetObjectRequest
+            {
+                BucketName = bucketName,
+                Key = key
+            };
+
+            var response = await _s3Client.GetObjectAsync(getObjectRequest);
+
+            using (var sr = new System.IO.StreamReader(response.ResponseStream))
+            {
+                var contents = sr.ReadToEnd();
+
+                return JsonConvert.DeserializeObject<GetJsonObjectResponse>(contents);
+            }
         }
     }
 }
